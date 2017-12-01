@@ -1,35 +1,35 @@
-doctype html
-html
-	head
-		script(src='http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js')
-		script.
-			$(document).ready(function () {
-				$('#submit').click(function(event){
-				if($('#email').val().trim().length === 0 || $('#password').val().trim().length === 0) {
-					event.preventDefault();
-					$('#error-message').html("Please enter username and password");
-				}
-			})
-			})
-	body
-		h1 ARTicles - an art blog
-		if user
-			a(href='/profile') View profile
-			br
-			a(href='/logout') Log out
-		else
-			h2 Already signed up? Log in here!
-			form(action='/login' method='post')
-				input#email(name='email' required, placeholder='Enter your email')
-				input#password(name='password' type='password' required, placeholder='Enter your password')
-				input(type='submit' value='Login' id='submit')
-		h3#error-message= message
+extends layout
 
-			h2 Not registered yet? Sign up here!
-			form.col.s12(action='/signup', method='POST')
-				input(type='text', name='username', placeholder='Enter your username')
-				input(type='text', name='email', placeholder='Enter your email')
-				input(type='password', name='password', placeholder='Choose a password')
-				button.btn.btn-default#signup(type="submit", name="submit") Create your account
-			p= message	
+block content
+	h1 ARTicles - an art blog
+	if user
+		h2 Welcome, #{user.username}
+		h3= message
+		//- a(href='/profile') View profile
+		//- br
+		//- a(href='/logout') Log out
+	else
+		h3 Already registered? LOG IN here!
+		form(action='/login' method='post')
+			input#email(name='email' required, placeholder='Enter your email')
+			input#password(name='password' type='password' required, placeholder='Enter your password')
+			input(type='submit' value='Login' id='submit')
+		p= message
+		h2#error-message= message
 
+		h3 Not registered yet? SIGN UP here!
+		form.col.s12(action='/register', method='POST')
+			input(type='text', name='username', placeholder='Enter your username')
+			input(type='text', name='email', placeholder='Enter your email')
+			input(type='password', name='password', placeholder='Choose a password')
+			button.btn.btn-default#signup(type="submit", name="submit") Create your account	
+	script(src='http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js')
+	script.
+		$(document).ready(function () {
+			$('#submit').click(function(event){
+			if($('#email').val().trim().length === 0 || $('#password').val().trim().length === 0) {
+				event.preventDefault();
+				$('#error-message').html("Please enter username and password");
+			}
+		})
+		})

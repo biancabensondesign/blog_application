@@ -1,16 +1,9 @@
-doctype html
-html(lang='en')
-	head
-		title Your ARTicle profile
-	body
-		body
-		div
-			ul
-				li
-					a(href='/') Home
-				li
-					a(href='blogfeed') View all posts
-				li
-					a(href='createpost') Create a new post
-				li
-					a(href='/') Log out
+extends layout
+
+block content
+	//- if user
+	h1 Welcome to your ARTicle profile #{user.username}
+	h3 Your email is: #{user.email}
+	h3 Your password is: #{user.password}
+	//- else
+	//- 	p Please login to view your profile!

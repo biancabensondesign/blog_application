@@ -1,0 +1,18 @@
+extends layout
+
+block content
+	article
+	h2 ARTicle blogfeed
+	p= message
+	br
+	h1 Here you can view all the posts by all our users.
+	div.container
+			h2 Our users have entered #{blogposts.length} blogposts!
+			each post in blogposts
+				h3 
+					a(href='/blogposts/' + post.id) Blogpost #{post.id}
+					p #{post.title}
+					p #{post.body}
+					p Posted by #{post.userId}
+			
+

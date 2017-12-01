@@ -1,18 +1,13 @@
-doctype html
-html(lang='en')
-	head
-		title Your ARTicle posts
-	body
-		body
-		div
-			ul
-				li
-					a(href='/') Home
-				li
-					a(href='account') Your profile
-				li
-					a(href='blogfeed') View all posts
-				li
-					a(href='createpost') Create a new post
-				li
-					a(href='/') Log out
+extends layout
+
+block content
+		h2 Your ARTicle blogposts.
+		p= message
+		br
+		h3 Here you can view all the posts you have entered.
+		div.container
+				h2 You have entered #{blogposts.length} blogposts!
+				each post in blogposts
+					h3 Blogpost #{post.id}
+					p #{post.title}
+					p #{post.body}

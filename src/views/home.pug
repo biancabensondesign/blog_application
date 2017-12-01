@@ -1,18 +1,7 @@
-doctype html
-html(lang='en')
-	head
-		title Welcome to ARTicle's homepage
-	body
-		body
-		div
-			ul
-				li
-					a(href='/') Home
-				li
-					a(href='account') Your profile
-				li
-					a(href='blogfeed') View all posts
-				li
-					a(href='createpost') Create a new post
-				li
-					a(href='/') Log out
+extends layout
+
+block content
+		if user 
+			h1 Welcome, #{user.username}
+		else
+			h2= message

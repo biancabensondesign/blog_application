@@ -1,0 +1,36 @@
+doctype html
+html(lang='en')
+	head
+		meta(charset='UTF-8')
+		meta(name='viewport', content='width=device-width, initial-scale=1.0')
+		//- link(rel='stylesheet', type='text/css', href='../css/fonts/fonts.css')
+		//- link(rel='stylesheet', type='text/css', href='/css/style.css')
+		//- script(src='https://code.jquery.com/jquery-1.10.2.js')
+		title ARTicles
+	body
+		#main
+			nav
+		div
+			ul
+				if user
+					li
+						a(href='/profile') Your profile
+					li
+						a(href='/yourposts') Your posts
+					li
+						a(href='/createpost') Create a new post
+					li
+						a(href='/blogposts') Blogfeed
+					li
+						a(href='/logout') Log out
+				else
+					li
+						a(href='/') Home/Log in
+					li
+						a(href='/blogposts') Blogfeed
+
+					
+
+		if user 
+			p #{user.username}
+		block content			

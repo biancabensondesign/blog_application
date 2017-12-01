@@ -1,18 +1,18 @@
 const Sequelize = require('sequelize');
 const express = require('express');
-const fs = require('fs');
+// const fs = require('fs');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
 
-const { Client } = require('pg')
-const client = new Client({ 
-	database: 'blog_application',
-  	host: 'localhost',
-  	user: 'biancaspoelstra'
-})
+// const { Client } = require('pg')
+// const client = new Client({ 
+// 	database: 'blog_application',
+//   	host: 'localhost',
+//   	user: 'biancaspoelstra'
+// })
 
-client.connect()
+// client.connect()
 
 const app = express();
 const sequelize = new Sequelize('blog_application', process.env.POSTGRES_USER, null, {
@@ -26,31 +26,35 @@ app.set('view engine', 'pug')
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
-// app.use(session({
-// 	secret: "safe",
-// 	saveUnitialized: true,
-// 	store: new SequelizeStore({
-// 		db: sequelize,
-// 		checkExpirationInterval: 15 * 60 * 1000,
-// 		expiration: 24 * 60 * 60 * 1000
-// 	})
-// }))
+app.use(session({
+	store: new SequelizeStore({
+		db: sequelize,
+		checkExpirationInterval: 15 * 60 * 1000,
+		expiration: 24 * 60 * 60 * 1000
+	}),
+	secret: "safe",
+	saveUnitialized: true,
+	resave: false
+}))
 
 //MODEL DEFINITION
+// const User = sequelize.define('users', { username: {type: Sequelize.STRING, unique:true }, email: Sequelize.STRING })
+
 const User = sequelize.define('users', {
 	username: {
 		type: Sequelize.STRING
 	},
-		email: {
+	email: {
 		type: Sequelize.STRING,
 		unique: true
 	},
-		password:{
-    	type: Sequelize.STRING
+		password: {
+    		type: Sequelize.STRING
   	}
 	},{
   		timestamps: false
-})
+	}
+)
 
 const Blogpost = sequelize.define('blogposts', {
 	title: {
@@ -78,76 +82,232 @@ sequelize.sync();
 
 //--------------------ROUTES-----------------//
 
-//GET AND RENDER HOMEPAGE
+//GET AND RENDER INDEX PAGE
 app.get('/', function(request, response){
-	response.render('index')
+	console.log(request.session)
+	const user = request.session.user
+	const message = request.query.message
+	response.render('index', {user: user, message: message} )
 });
 
-//
-app.get('/', function(req, res){
+//LOG USER IN, SEARCH FOR MATCH IN DB, SHOW HOME
+app.get('/home', function(req, res){
 
-	var user = req.session.user //variable to catch req.session.user property
-	res.render("home", {user: user})
-
+	const user = req.session.user;
+	// console.log('Session at home '+user)
+	// console.log('THE SESSION IS: ' + req.session.user);
+	var message = req.query.message;
+	res.render('home', {user: user, message: message})
 });
 
-// app.post('/', function (req, res) {
+app.post('/login', function(req, res){
+	var email = req.body.email;
+	var password = req.body.password;
+	//var message = req.query.message;
 
-//   	var email = req.body.email;//input from form, input data stored on server as req.body
-// 	var password = req.body.password;
+	User.findOne({
+		where: {
+			email: email
+		}
+	})
+	.then(function(user){
+		if(user!== null && password === user.password){
+			console.log('AFTER LOGGING IN, WE FOUND USER ' + user.email)
+			req.session.user = user;
+			console.log('ASSIGNED SESSION ' + req.session.user.email)
+			res.render('profile', {user: user});
+		} else {
+			res.redirect('/?message=' + encodeURIComponent('Invalid email or password. Please try again!'));
+		}
+	})
+	.catch( function(err) {
+		console.error(err)
+	});
+});
 
-// 	console.log('Just to make sure I get: '+email+" "+password);
+//REGISTER FORM ON INDEX
+//CREATE NEW USER IN DB, LOG USER IN, SHOW HOME
+app.post('/register', function(req, res){
+	var inputusername = req.body.username
+	var inputemail = req.body.email
+	var inputpassword = req.body.password
 
-// //DATA VALIDATION
-// ////
+	console.log("Following sign in data received: "+inputusername+" "+inputemail+" "+inputpassword);
+
+		User.create({
+			username: inputusername,
+			email: inputemail,
+			password: inputpassword
+		})
+		.then( (user) => {
+			req.session.user = user;
+			res.redirect('/home?message=' + encodeURIComponent("You have succesfully registered"))//redirecting to home with the message ...
+		})
+});
 
 
-// //FIND MATCH IN DB
-// 	User.findOne({//look in db to see if there is user with matching name
-// 		where: {
-// 			username: username //match whatever was entered in form
-// 		}
-// 	}).then(function(user){//if user was found successfully, session can start
-// 			if(user!== null && password === user.password){//
-//         req.session.user = user; //creating new session indentifier which is set equal user, = to current user we just found, req.session object will give us access to his information as long as he is logged in
-// 				res.redirect('/profile'); //redirecting user to /myprofile, session is now active, same as making get request to /myprofile
-// 			} else {
-// 				res.redirect('/?message=' + encodeURIComponent('Invalid username or password.'));
-// 			}
-// 	});
+//IS SOMEONE LOGGED IN, 
+//IF YES, WHO? 
+//SHOW PROFILE WITH USER DETAILS
+app.get('/profile', (req,res) => {
+	const user = req.session.user;
+
+	Blogpost.findAll({
+		include: [{
+			model: User
+		}]
+	})
+	.then((blogposts) => {
+		res.render('profile', {user: user});
+	})
+});
+
+//DATA VALIDATION
+
+
+
+//CREATEPOST PAGE ROUTE
+//SHOW PUGFILE WITH FIELDS TO ENTER POST
+//SUBMIT BTN TO POST on pug
+app.get('/createpost', (req, res) => {
+	const user = req.session.user;
+	var message = req.query.message
+	res.render('createpost', {user: user, message: message})
+})
+
+//CREATE NEW BLOGPOST
+app.post('/createpost', (req, res) =>{
+	var createBlogposttitle = req.body.title
+	var createBlogpostbody = req.body.body
+	var userId = req.session.user.id
+
+
+	console.log("Following blogpost info received: "+createBlogposttitle+" "+createBlogpostbody)
+
+	User.findOne({
+		where: {
+			id: userId
+		}
+	})
+		.then(function(user){
+			return user.createBlogpost({
+				title: createBlogposttitle,
+				body: createBlogpostbody,
+				userId: userId
+			})
+		})
+		.then((blogpost) =>{
+			res.redirect(`/viewnewcreatedpost/${blogpost.id}`);
+		})
+	});
+
+//RENDER NEWLY CREATED POST(dynamic params) + PUG
+app.get('/viewnewcreatedpost/:blogpostId', function(req, res) {
+    
+    const blogpostId = req.params.blogpostId;
+
+    Blogpost.findOne({
+            where: {
+                id: blogpostId
+            },
+            include: [{
+                model: User
+            }]
+        })
+        .then(function(blogpost) {
+          
+                
+
+            res.render('viewnewcreatedpost', { title: blogpost.title, body: blogpost.body, id: blogpostId, userValue: blogpost.user});
+        })
+});
+
+//YOURPOSTS PAGE ROUTE
+//user logged in? 
+//get posts from database(fkey user in blogposts), 
+//render user's posts
+
+// app.get('/yourposts', function (req, res){
+// 	const user = req.session.user
+// 	res.render('yourposts', {user: user})
 // });
 
+app.get('/yourposts', function(req, res){
+  const username = req.session.user.username
+  const userId = req.session.user.id
 
-// //PROFILE PAGE ROUTE
-// app.get('/profile', function (request, response) {
-// 	res.render('profile')
-// });
+  User.findOne({
+  	where: {
+  		username: username
+  	}
+  }).then((user)=>{
+  	if(user !== null){
 
-// //BLOGFEED PAGE ROUTE
-// app.get('/blogfeed', function (request, response){
-// 	res.render('blogfeed')
-// });
+  	Blogpost.findAll({
+  	where: {
+		userId: userId
+	},
+    	include: [{
+ 	   	model: User
+  	}]
+  })
+  .then((blogposts)=>{
+    console.log('There are '+blogposts.length)
+    res.render('yourposts',{user: user, blogposts: blogposts})//send to pugpage as a property blogPost
+  })
+}
+  	})
+  })
 
-// //CREATEPOST PAGE ROUTE
-// app.get('/createpost', function (request, response){
-// 	res.render('createpost')
-// });
+//VIEW SINGLE POST
+app.get('/blogposts/:blogpostId', function (req, res){
 
-// //YOURPOSTS PAGE ROUTE
-// app.get('/yourposts', function (reqeust, response){
-// 	res.render('yourposts')
-// });
+	const blogpostId = req.params.blogpostId;
+	console.log(blogpostId);
+
+	Blogpost.findOne({
+		where: {
+		id: blogpostId
+	},
+	include: [{
+		model: User
+		}]
+	})
+	.then(function(blogpost){
+		console.log(blogpost)
+		console.log(blogpost.users);
+		console.log('Userdate: ' +blogpost.user.name);
+		res.render('blogpost', {title: blogpost.title, body: blogpost.body, blogpostId: blogpostId, user: blogpost.user});
+	})
+});
+  
+
+//BLOGFEED
+
+app.get('/blogposts', function(req, res){
+  const user = req.session.user
+
+  Blogpost.findAll({
+    include: [{
+    model: User
+  }]
+  })
+  .then((blogposts)=>{
+    console.log(blogposts)
+    res.render('blogposts', {user: user, blogposts: blogposts})//send to pugpage as a property blogPost
+  })
+})
 
 
-// //LOGOUT
-// app.get('/logout', (req,res)=>{
-//   req.session.destroy(function(error) {
-// 		if(error) {
-// 			throw error;
-// 		}
-// 		res.redirect('/?message=' + encodeURIComponent("Successfully logged out."));
-// 	})
-// })
+//LOGOUT
+app.get('/logout', (req,res)=>{
+  req.session.destroy(function(error) {
+		if(error) {
+			throw error;
+		}
+		res.redirect('/home?message=' + encodeURIComponent("Successfully logged out."));
+	})
+})
 
 
 //IS APP CONNECTED TO PORT?
