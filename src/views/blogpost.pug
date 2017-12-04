@@ -4,5 +4,20 @@ block content
 		p #{blogpostId}
 		p #{title}
 		p #{body}
+
+		div
+			h4 Leave a comment
+				form(action='/comments' method='post')
+					textarea(minlength='5' rows="10" cols="25" name='body' placeholder='Comment' required)
+					br
+					input.btn(type='submit' value='Submit comment' id='submit')
+					input(type='hidden' name='postId' value= blogpostId)
+					br
+					h4 Comments:
+						if comments
+							each comment in comments
+								p #{comment.body}
+									//-each user in blogpost.users
+										p #{user.username}
 		
 					

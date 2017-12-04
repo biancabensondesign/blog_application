@@ -76,7 +76,9 @@ const Comment = sequelize.define('comments', {
 User.hasMany(Blogpost)
 User.hasMany(Comment)
 Blogpost.belongsTo(User)
+Blogpost.hasMany(Comment)
 Comment.belongsTo(User)
+Comment.belongsTo(Blogpost)
 
 sequelize.sync();
 
@@ -270,15 +272,45 @@ app.get('/blogposts/:blogpostId', function (req, res){
 		id: blogpostId
 	},
 	include: [{
-		model: User
+		model: User,
+    	model: Comment
 		}]
 	})
 	.then(function(blogpost){
-		console.log(blogpost)
-		console.log(blogpost.users);
-		console.log('Userdate: ' +blogpost.user.name);
-		res.render('blogpost', {title: blogpost.title, body: blogpost.body, blogpostId: blogpostId, user: blogpost.user});
+		// console.log(blogpost)
+		// console.log(blogpost.users);
+		// console.log('Userdate: ' +blogpost.user.name);
+		res.render('blogpost', {title: blogpost.title, body: blogpost.body, blogpostId: blogpostId, user: blogpost.user, comments: blogpost.comments});
 	})
+});
+
+//COMMENTS
+
+app.post('/comments', (req, res) => {
+  const user = req.session.user;
+  const commentText = req.body.body;
+  const postComment = req.body.postId;
+
+  //console.log('hey')
+  if (user === undefined) {
+    res.redirect('/?message=' + encodeURIComponent("Please log in"));
+  } else {
+    User.findOne({
+      where: {username: user.username}
+    })
+    .then((user) => {
+    	//console.log('USERNAME IS: ' + user.username)
+      return user.createComment({
+        body: commentText,
+        blogpostId: postComment
+      });
+    })
+    .then((userComment) => {
+      console.log(userComment.body);
+      res.redirect(`/blogposts/${req.body.postId}`);
+      //res.render('blogpost', {blogpost: comments})
+    });
+  };
 });
   
 

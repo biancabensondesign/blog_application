@@ -1,13 +1,14 @@
 extends layout
 
 block content
-		h2 Your ARTicle blogposts.
+		h1 Your ARTicle blogposts.
 		p= message
-		br
-		h3 Here you can view all the posts you have entered.
+		h2 Here you can view all the posts you have entered.
 		div.container
-				h2 You have entered #{blogposts.length} blogposts!
+				h3 You have entered #{blogposts.length} blogposts!
 				each post in blogposts
-					h3 Blogpost #{post.id}
+					h4 Blogpost #{post.id}
 					p #{post.title}
 					p #{post.body}
+		
+
