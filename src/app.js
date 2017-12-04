@@ -1,18 +1,16 @@
 const Sequelize = require('sequelize');
 const express = require('express');
-// const fs = require('fs');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
 
 // const { Client } = require('pg')
-// const client = new Client({ 
+// const client = new Client({
 // 	database: 'blog_application',
-//   	host: 'localhost',
-//   	user: 'biancaspoelstra'
-// })
-
-// client.connect()
+//   host: 'localhost',
+//   user: process.env.POSTGRES_USER,
+//   password: process.env.POSTGRES_PASSWORD
+// });
 
 const app = express();
 const sequelize = new Sequelize('blog_application', process.env.POSTGRES_USER, null, {
