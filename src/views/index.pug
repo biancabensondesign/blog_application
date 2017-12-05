@@ -15,7 +15,7 @@ block content
 			input#password(name='password' type='password' required, placeholder='Enter your password')
 			input(type='submit' value='Login' id='submit')
 		p= message
-		h2#error-message= message
+		//-h2#error-message= message
 
 		h3 Not registered yet? SIGN UP here!
 		form.col.s12(action='/register', method='POST')
