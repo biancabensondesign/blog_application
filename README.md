@@ -4,6 +4,7 @@ NYCDA project to apply everything the course covered in one application, such as
 - using RESTful routing to define the routes server-side
 - utilizing Sequelize for database management 
 - utilizing PUG pages for defining client-side behaviour
+- utilizing Github as version control tool
 
 FINAL PROJECT SPECIFICATION:
 For my final project I will keep working on my blog application.
