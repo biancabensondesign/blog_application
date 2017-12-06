@@ -1,7 +1,17 @@
 # blog_application
-NYCDA project to assimilate all of the skills covered in the course, e.g Sequelize, RESTful routing, etc.
+NYCDA project to apply everything the course covered in one application, such as 
+- setting up an application in Node.js
+- using RESTful routing to define the routes server-side
+- utilizing Sequelize for database management 
+- utilizing PUG pages for defining client-side behaviour
 
-REQUIREMENTS: 
+FINAL PROJECT SPECIFICATION:
+For my final project I will keep working on my blog application.
+Since the backend is in place, I will focus on improving the front end, by using a front end framework such as Sass.
+And of course I will keep on tinkering in the backend to fine tune some functionalities.
+
+
+REQUIREMENTS (for first phase of blog application): 
 Sequelize
 Restful routing
 Connection string read from environment variables
