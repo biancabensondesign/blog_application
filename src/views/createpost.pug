@@ -3,11 +3,11 @@ extends layout
 block content
 	if user
 		h2 Use this form to create a new post
-		form(action='/createpost' method='post')
+		form(action='/posts' method='post')
 			br
 			input#posttitle(name='title', type='text' required, placeholder='Post Title')
 			br
-			textarea#postbody(minlength='5' rows="20" cols="50" name='body' placeholder='Create your post here' required)
+			textarea#postbody(maxlength='2000' rows="20" cols="50" name='body' placeholder='Create your post here' required)
 			br
 			button.btn.btn-primary(type='submit') submit
 		p= message

@@ -5,13 +5,6 @@ const bodyParser = require('body-parser');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const app = express();
 
-// const { Client } = require('pg')
-// const client = new Client({
-// 	database: 'blog_application',
-//   host: 'localhost',
-//   user: process.env.POSTGRES_USER,
-//   password: process.env.POSTGRES_PASSWORD
-// });
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const myPlaintextPassword = 'myPassword';
@@ -96,8 +89,6 @@ app.get('/', function(request, response){
 app.get('/home', function(req, res){
 
 	const user = req.session.user;
-	// console.log('Session at home '+user)
-	// console.log('THE SESSION IS: ' + req.session.user);
 	var message = req.query.message;
 	res.render('home', {user: user, message: message})
 });
@@ -105,23 +96,29 @@ app.get('/home', function(req, res){
 app.post('/login', function(req, response){
 	var email = req.body.email;
 	var password = req.body.password;
-	//var message = req.query.message;
+
+	if(req.body.email.length === 0){
+		 response.redirect('/?message=' + encodeURIComponent('Please enter your email'))
+	}
+
+	if(req.body.password.length === 0){
+		 response.redirect('/?message=' + encodeURIComponent('Please enter your password'))
+	}
 
 	User.findOne({
 		where: {
 			email: email
 		}
-	}).then((user) => {
+	})
+	.then((user) => {
         if (user !== null) {
           bcrypt.compare(password, user.password, function(err,res){
             if (res) {
-            	//console.log('do i make it here?')
               req.session.user = user
               console.log(user);
               response.redirect('/profile')
             } else {
-            	//console.log('do i make it here?   2')
-              response.redirect('/?message=' + encodeURIComponent('Incorrect password'))
+              response.redirect('/?message=' + encodeURIComponent('Incorrect password, please try again'))
             }
           })
         } else {
@@ -134,7 +131,7 @@ app.post('/login', function(req, response){
 
 //REGISTER FORM ON INDEX
 app.post('/register', function(req, res){
-	const user = req.session.user;
+	const user = req.session.user
 	const inputusername = req.body.username
 	const inputemail = req.body.email
 	const inputpassword = req.body.password
@@ -169,7 +166,7 @@ app.post('/register', function(req, res){
 					})
 					.then( (user) => {
 						req.session.user = user;
-						res.redirect('/home?message=' + encodeURIComponent("You have succesfully registered"))//redirecting to home with the message ...
+						res.redirect('/home?message=' + encodeURIComponent('You have succesfully registered'))//redirecting to home with the message ...
 					})
 					})
 				}
@@ -180,16 +177,11 @@ app.post('/register', function(req, res){
 			console.log(err);
 				 })
 	})
-
-////BCRYPT END
 		
-
-
-//IS SOMEONE LOGGED IN, 
-//IF YES, WHO? 
 //SHOW PROFILE WITH USER DETAILS
 app.get('/profile', (req,res) => {
 	const user = req.session.user;
+	console.log(user)
 
 	Blogpost.findAll({
 		include: [{
@@ -201,27 +193,15 @@ app.get('/profile', (req,res) => {
 	})
 });
 
-//DATA VALIDATION(SERVER SIDE, on pug files required to required fields, and enctype to form must be added)
-// if(email.length === 0) {
-// 		res.redirect('/?message=' + encodeURIComponent("Please fill out your email address."));
-// 		return;
-// 	}
-
-// 	if(password.length === 0) {
-// 		res.redirect('/?message=' + encodeURIComponent("Please fill out your password."));
-// 		return;
-// 	}
-
-
 //CREATEPOST PAGE ROUTE
-app.get('/createpost', (req, res) => {
+app.get('/post/new', (req, res) => {
 	const user = req.session.user;
 	var message = req.query.message
 	res.render('createpost', {user: user, message: message})
 })
 
 //CREATE NEW BLOGPOST
-app.post('/createpost', (req, res) =>{
+app.post('/posts', (req, res) =>{
 	var createBlogposttitle = req.body.title
 	var createBlogpostbody = req.body.body
 	var userId = req.session.user.id
@@ -242,12 +222,12 @@ app.post('/createpost', (req, res) =>{
 			})
 		})
 		.then((blogpost) =>{
-			res.redirect(`/viewnewcreatedpost/${blogpost.id}`);
+			res.redirect(`/posts/${blogpost.id}`);
 		})
 	});
 
-//RENDER NEWLY CREATED POST(dynamic params) + PUG
-app.get('/viewnewcreatedpost/:blogpostId', function(req, res) {
+//RENDER NEWLY CREATED POST(dynamic params)
+app.get('/posts/:blogpostId', function(req, res) {
     
     const blogpostId = req.params.blogpostId;
 
@@ -256,7 +236,7 @@ app.get('/viewnewcreatedpost/:blogpostId', function(req, res) {
                 id: blogpostId
             },
             include: [{
-                model: User
+                model: User,
             }]
         })
         .then(function(blogpost) {
@@ -267,7 +247,7 @@ app.get('/viewnewcreatedpost/:blogpostId', function(req, res) {
         })
 });
 
-//YOURPOSTS PAGE ROUTe
+//YOURPOSTS PAGE ROUTE
 app.get('/yourposts', function(req, res){
   const username = req.session.user.username
   const userId = req.session.user.id
@@ -343,7 +323,7 @@ app.post('/comments', (req, res) => {
   
 
 //BLOGFEED
-app.get('/blogposts', function(req, res){
+app.get('/posts', function(req, res){
   const user = req.session.user
 
   Blogpost.findAll({
